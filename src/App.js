@@ -1,16 +1,22 @@
+import { useState } from "react";
 import "./index.css"
 
-const initialItems = [
-  { id: 1, description: "Passports", quantity: 2, packed: false },
-  { id: 2, description: "Socks", quantity: 12, packed: false },
-];
-
 function App() {
+  const [items, setItems] =useState([]);
+
+  function handleAddItems(item){
+    setItems((items) => [...items, item]);
+  }
+  
+  function handledeleteItem(id){
+    setItems(items=>items.filter(item=>item.id !== id));
+  }
+
   return(
   <div className="app">
     <Logo/>
-    <Form/>
-    <PackingList/>
+    <Form onAddItems={handleAddItems}/>
+    <PackingList items={items} onDeleteItem={handledeleteItem}/>
     <Stats/>
   </div>)
 }
@@ -19,43 +25,69 @@ function Logo(){
   return<h1>🌴 Far Away 💼</h1>
 }
 
-function Form(){
+function Form({onAddItems}){
 
-  function handleSubmit(e){
+  const [description, setDescription] = useState("");
+  const [quantity, setQuantity ] =useState(1);
+  
+
+
+  function handleSubmit(e){ 
     e.preventDefault();
+    //to get the data from form, from the event object
+    //we use controlled elements
+    if(!description) return;
+
+    const newItem = {description, quantity, packed:false, id: Date.now()}
+
+    onAddItems(newItem);
+
+    setDescription("");
+    setQuantity(1);   
+
   }
 
   return(
-    <form className="add-form" onSubmit={handleSubmit}>
+    <form className="add-form" onSubmit={(e)=>handleSubmit(e)}>
       <h3>What do you need for your trip? </h3>
-      <select>
+      <select 
+      type="number" 
+      value={quantity} 
+      onChange={(e)=>setQuantity(e.target.value)}>
         {Array.from({length:20}, (_,i)=> i+1).map((num)=>(
-          <option value={num} key={num}>{num}</option>
+          <option value={num} key={num}>
+            {num}
+          </option>
         ))}
       </select>
-      <input type="text" placeholder="Item..."></input>
+      <input 
+      type="text"
+      placeholder="Item..."
+      value={description} 
+      onChange={(e)=>setDescription(e.target.value)}>      
+      </input>
       <button>Add</button>
     </form>
   )
 }
 
-function PackingList(){
+function PackingList({items, onDeleteItem}){
   return(
     <div className="list">
       <ul className="list">
-        {initialItems.map((itemObj) => <Item itemObj={itemObj} key={itemObj.id}/>)}
+        {items.map((itemObj) => <Item onDeleteItem = {onDeleteItem} itemObj={itemObj} key={itemObj.id}/>)}
       </ul>
     </div>
   )
 }
 
-function Item({itemObj}){
+function Item({itemObj, onDeleteItem}){
   return(
     <li>
       <span style={itemObj.packed? {textDecoration:"line-through"}: {}}>
       {itemObj.quantity} {itemObj.description}
       </span>
-      <button>❌</button>     
+      <button onClick={()=> onDeleteItem(itemObj.id)}>❌</button>     
     </li>   
   )
 }
